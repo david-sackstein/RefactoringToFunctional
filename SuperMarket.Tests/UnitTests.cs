@@ -12,7 +12,7 @@ namespace SuperMarket.Tests
         private ProductService _service;
         private ProductRepository _repository;
         private SupplierService _supplier;
-        private Product _product;
+        private ProductDefinition _product;
 
         [TestInitialize]
         public void SetUp()
@@ -23,7 +23,7 @@ namespace SuperMarket.Tests
             _supplier = new SupplierService();
             _service = new ProductService(_repository, _supplier);
 
-            _product = new Product
+            _product = new ProductDefinition
             {
                 ProductId = 1,
                 Category = Category.Food,
@@ -171,9 +171,9 @@ namespace SuperMarket.Tests
             Assert.IsTrue(product.Quantity == _product.Quantity);
         }
 
-        private static Product CreateProduct(int productId)
+        private static ProductDefinition CreateProduct(int productId)
         {
-            return new Product
+            return new ProductDefinition
             {
                 ProductId = productId,
                 Category = Category.Food,

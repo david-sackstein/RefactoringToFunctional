@@ -45,6 +45,7 @@
     <Compile Include="Interfaces\ISupplierService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\Constants.cs" />
+    <Compile Include="Services\ProductDefinition.cs" />
     <Compile Include="Services\ProductService.cs" />
     <Compile Include="Response\ResponseCode.cs" />
     <Compile Include="Services\Response.cs" />

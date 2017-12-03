@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Text.RegularExpressions;
+using FunctionalExtensions;
 using SuperMarket.Entities;
 
 namespace SuperMarket.Service
@@ -15,22 +15,32 @@ namespace SuperMarket.Service
             _supplier = supplier;
         }
 
-        public HttpResponse CreateProduct(Product product)
+        public HttpResponse CreateProduct(ProductDefinition definition)
         {
-            string nameError = ValidateName(product.Name);
-            if (nameError != string.Empty)
-                return Response.BadRequest(nameError);
+            Result<ProductName> productName = ProductName.Create(definition.Name);
+            if (productName.IsFailure)
+                return Response.BadRequest(productName.Error);
 
-            string manufacturerError = ValidateManufacturer(product.Manufacturer);
-            if (manufacturerError != string.Empty)
-                return Response.BadRequest(manufacturerError);
+            Result<ManufacturerName> manufacturer = ManufacturerName.Create(definition.Manufacturer);
+            if (manufacturer.IsFailure)
+                return Response.BadRequest(manufacturer.Error);
 
-            if (product.ImporterEmail != null)
+            if (definition.ImporterEmail != null)
             {
-                string emailError = ValidateEmail(product.ImporterEmail);
-                if (emailError != string.Empty)
-                    return Response.BadRequest(emailError);
+                Result<Email> email = Email.Create(definition.ImporterEmail);
+                if (email.IsFailure)
+                    return Response.BadRequest(email.Error);
             }
+
+            Product product = new Product
+            {
+                ProductId = definition.ProductId,
+                Category = definition.Category,
+                Name = productName.Value,
+                Manufacturer = manufacturer.Value,
+                ImporterEmail = (definition.ImporterEmail == null) ? null : (Email)definition.ImporterEmail,
+                Quantity = definition.Quantity
+            };
 
             _repository.Add(product);
 
@@ -43,7 +53,17 @@ namespace SuperMarket.Service
             if (product == null)
                 return Response.BadRequest($"Product with id {productId} was not found");
 
-            return Response.Ok(product);
+            ProductDefinition definition = new ProductDefinition
+            {
+                ProductId = product.ProductId,
+                Category = product.Category,
+                Name = product.Name.Value,
+                Manufacturer = product.Manufacturer.Value,
+                ImporterEmail = product.ImporterEmail?.Value,
+                Quantity = product.Quantity
+            };
+
+            return Response.Ok(definition);
         }
 
         public HttpResponse Order(int productId, uint quantity)
@@ -58,16 +78,16 @@ namespace SuperMarket.Service
             if (product.Quantity < quantity)
             {
                 uint excess = quantity - product.Quantity;
-                string supplierError = OrderFromSupplier(productId, product, excess, out uint orderedQuantity);
-                if (supplierError != String.Empty)
-                    return Response.InternalError(supplierError);
+                Result<uint> orderedQuantity = OrderFromSupplier(productId, product, excess);
+                if (orderedQuantity.IsFailure)
+                    return Response.InternalError(orderedQuantity.Error);
 
-                if (product.Quantity + orderedQuantity < quantity)
+                if (product.Quantity + orderedQuantity.Value < quantity)
                 {
                     return Response.BadRequest("The product is out of stock");
                 }
 
-                product.Quantity += orderedQuantity;
+                product.Quantity += orderedQuantity.Value;
             }
 
             product.Quantity -= quantity;
@@ -88,49 +108,17 @@ namespace SuperMarket.Service
             }
         }
 
-        private string OrderFromSupplier(int productId, Product product, uint excess, out uint ordered)
+        private Result<uint> OrderFromSupplier(int productId, Product product, uint excess)
         {
             try
             {
-                ordered = _supplier.Order(productId, product.Manufacturer, excess);
-                return String.Empty;
+                uint ordered = _supplier.Order(productId, product.Manufacturer, excess);
+                return Result.Ok(ordered);
             }
             catch (Exception e)
             {
-                ordered = 0;
-                return e.Message;
+                return Result.Fail<uint>(e.Message);
             }
         }
-
-        private string ValidateName(string productName)
-        {
-            if (string.IsNullOrWhiteSpace(productName))
-                return "Product name must not be empty";
-
-            if (productName.Length > 100)
-                return "Product name is too long";
-
-            return string.Empty;
-        }
-
-        private string ValidateManufacturer(string manufacturerName)
-        {
-            if (string.IsNullOrWhiteSpace(manufacturerName))
-                return "Manufacturer name must not be empty";
-
-            if (manufacturerName.Length > 256)
-                return "Manufacturer name is too long";
-
-            return string.Empty;
-        }
-
-        private string ValidateEmail(string email)
-        {
-            if (!Regex.IsMatch(email, @"^(.+)@(.+)$"))
-                return email + " is invalid";
-
-            return String.Empty;
-        }
-
     }
 }
