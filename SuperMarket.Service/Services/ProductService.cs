@@ -17,83 +17,70 @@ namespace SuperMarket.Service
 
         public HttpResponse CreateProduct(Product product)
         {
-            try
-            {
-                ValidateName(product.Name);
-                ValidateManufacturer(product.Manufacturer);
-                if (product.ImporterEmail != null)
-                {
-                    ValidateEmail(product.ImporterEmail);
-                }
+            string nameError = ValidateName(product.Name);
+            if (nameError != string.Empty)
+                return Response.BadRequest(nameError);
 
-                _repository.Add(product);
+            string manufacturerError = ValidateManufacturer(product.Manufacturer);
+            if (manufacturerError != string.Empty)
+                return Response.BadRequest(manufacturerError);
 
-                _repository.Commit();
+            if (product.ImporterEmail != null)
+            {
+                string emailError = ValidateEmail(product.ImporterEmail);
+                if (emailError != string.Empty)
+                    return Response.BadRequest(emailError);
+            }
 
-                return Response.Ok();
-            }
-            catch (BusinessException ex)
-            {
-                return Response.BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return Response.InternalError(ex.Message);
-            }
+            _repository.Add(product);
+
+            return Commit();
         }
 
         public HttpResponse GetProduct(int productId)
         {
-            try
-            {
-                var product = _repository.Find(productId);
-                if (product == null)
-                    throw new BusinessException($"Product with id {productId} was not found");
+            var product = _repository.Find(productId);
+            if (product == null)
+                return Response.BadRequest($"Product with id {productId} was not found");
 
-                return Response.Ok(product);
-            }
-            catch (BusinessException ex)
-            {
-                return Response.BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return Response.InternalError(ex.Message);
-            }
+            return Response.Ok(product);
         }
 
         public HttpResponse Order(int productId, uint quantity)
         {
-            try
+            var product = _repository.Find(productId);
+            if (product == null)
+                return Response.BadRequest($"Product with id {productId} was not found");
+
+            if (quantity > (uint)Constants.MaxQuantityInOrder)
+                return Response.BadRequest("The order is too large");
+
+            if (product.Quantity < quantity)
             {
-                var product = _repository.Find(productId);
-                if (product == null)
-                    throw new BusinessException($"Product with id {productId} was not found");
+                uint excess = quantity - product.Quantity;
+                string supplierError = OrderFromSupplier(productId, product, excess, out uint orderedQuantity);
+                if (supplierError != String.Empty)
+                    return Response.InternalError(supplierError);
 
-                if (quantity > (uint)Constants.MaxQuantityInOrder)
-                    throw new BusinessException("The order is too large");
-
-                if (product.Quantity < quantity)
+                if (product.Quantity + orderedQuantity < quantity)
                 {
-                    uint excess = quantity - product.Quantity;
-                    uint orderedQuantity = _supplier.Order(productId, product.Manufacturer, excess);
-                    if (product.Quantity + orderedQuantity < quantity)
-                    {
-                        throw new BusinessException("The product is out of stock");
-                    }
-
-                    product.Quantity += orderedQuantity;
+                    return Response.BadRequest("The product is out of stock");
                 }
 
-                product.Quantity -= quantity;
-
-                _repository.Commit();
-
-                return Response.Ok();
+                product.Quantity += orderedQuantity;
             }
-            catch (BusinessException ex)
+
+            product.Quantity -= quantity;
+
+            return Commit();
+        }
+
+        private HttpResponse Commit()
+        {
+            try
             {
-                return Response.BadRequest(ex.Message);
+                _repository.Commit();
+                return Response.Ok();
             }
             catch (Exception ex)
             {
@@ -101,28 +88,48 @@ namespace SuperMarket.Service
             }
         }
 
-        private void ValidateName(string productName)
+        private string OrderFromSupplier(int productId, Product product, uint excess, out uint ordered)
+        {
+            try
+            {
+                ordered = _supplier.Order(productId, product.Manufacturer, excess);
+                return String.Empty;
+            }
+            catch (Exception e)
+            {
+                ordered = 0;
+                return e.Message;
+            }
+        }
+
+        private string ValidateName(string productName)
         {
             if (string.IsNullOrWhiteSpace(productName))
-                throw new BusinessException("Product name must not be empty");
+                return "Product name must not be empty";
 
             if (productName.Length > 100)
-                throw new BusinessException("Product name is too long");
+                return "Product name is too long";
+
+            return string.Empty;
         }
 
-        private void ValidateManufacturer(string manufacturerName)
+        private string ValidateManufacturer(string manufacturerName)
         {
             if (string.IsNullOrWhiteSpace(manufacturerName))
-                throw new BusinessException("Manufacturer name must not be empty");
+                return "Manufacturer name must not be empty";
 
             if (manufacturerName.Length > 256)
-                throw new BusinessException("Manufacturer name is too long");
+                return "Manufacturer name is too long";
+
+            return string.Empty;
         }
 
-        private void ValidateEmail(string email)
+        private string ValidateEmail(string email)
         {
             if (!Regex.IsMatch(email, @"^(.+)@(.+)$"))
-                throw new BusinessException(email + " is invalid");
+                return email + " is invalid";
+
+            return String.Empty;
         }
 
     }
