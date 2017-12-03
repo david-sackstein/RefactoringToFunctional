@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using SuperMarket.Entities;
-using Newtonsoft.Json;
 
 namespace SuperMarket.Service
 {
@@ -31,23 +30,15 @@ namespace SuperMarket.Service
 
                 _repository.Commit();
 
-                return new HttpResponse {ResponseCode = ResponseCode.Ok};
+                return Response.Ok();
             }
             catch (BusinessException ex)
             {
-                return new HttpResponse
-                {
-                    ResponseCode = ResponseCode.BadRequest,
-                    JsonValue = JsonConvert.SerializeObject(new {Result = ex.Message})
-                };
+                return Response.BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                return new HttpResponse
-                {
-                    ResponseCode = ResponseCode.InternalError,
-                    JsonValue = JsonConvert.SerializeObject(new {Result = ex.Message})
-                };
+                return Response.InternalError(ex.Message);
             }
         }
 
@@ -59,27 +50,15 @@ namespace SuperMarket.Service
                 if (product == null)
                     throw new BusinessException($"Product with id {productId} was not found");
 
-                return new HttpResponse
-                {
-                    ResponseCode = ResponseCode.Ok,
-                    JsonValue = JsonConvert.SerializeObject(product)
-                };
+                return Response.Ok(product);
             }
             catch (BusinessException ex)
             {
-                return new HttpResponse
-                {
-                    ResponseCode = ResponseCode.BadRequest,
-                    JsonValue = JsonConvert.SerializeObject(new {Result = ex.Message})
-                };
+                return Response.BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                return new HttpResponse
-                {
-                    ResponseCode = ResponseCode.InternalError,
-                    JsonValue = JsonConvert.SerializeObject(new {Result = ex.Message})
-                };
+                return Response.InternalError(ex.Message);
             }
         }
 
@@ -109,23 +88,16 @@ namespace SuperMarket.Service
                 product.Quantity -= quantity;
 
                 _repository.Commit();
-                return new HttpResponse {ResponseCode = ResponseCode.Ok};
+
+                return Response.Ok();
             }
             catch (BusinessException ex)
             {
-                return new HttpResponse
-                {
-                    ResponseCode = ResponseCode.BadRequest,
-                    JsonValue = JsonConvert.SerializeObject(new {Result = ex.Message})
-                };
+                return Response.BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                return new HttpResponse
-                {
-                    ResponseCode = ResponseCode.InternalError,
-                    JsonValue = JsonConvert.SerializeObject(new {Result = ex.Message})
-                };
+                return Response.InternalError(ex.Message);
             }
         }
 
@@ -152,5 +124,6 @@ namespace SuperMarket.Service
             if (!Regex.IsMatch(email, @"^(.+)@(.+)$"))
                 throw new BusinessException(email + " is invalid");
         }
+
     }
 }

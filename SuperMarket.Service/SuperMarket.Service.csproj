@@ -47,6 +47,7 @@
     <Compile Include="Services\Constants.cs" />
     <Compile Include="Services\ProductService.cs" />
     <Compile Include="Response\ResponseCode.cs" />
+    <Compile Include="Services\Response.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
