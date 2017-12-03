@@ -61,6 +61,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FunctionalExtensions\FunctionalExtensions.csproj">
+      <Project>{700C739D-13CF-417D-B82A-12FB0CF806D5}</Project>
+      <Name>FunctionalExtensions</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SuperMarket.Entities\SuperMarket.Entities.csproj">
       <Project>{81bee310-36e3-4ca6-a131-6ab820f5fc41}</Project>
       <Name>SuperMarket.Entities</Name>

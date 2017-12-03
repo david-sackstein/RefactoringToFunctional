@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperMarket.Entities", "Sup
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperMarket.Tests", "SuperMarket.Tests\SuperMarket.Tests.csproj", "{9255B273-3F6B-4765-8999-AF99EB8D5950}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FunctionalExtensions", "FunctionalExtensions\FunctionalExtensions.csproj", "{700C739D-13CF-417D-B82A-12FB0CF806D5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{9255B273-3F6B-4765-8999-AF99EB8D5950}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9255B273-3F6B-4765-8999-AF99EB8D5950}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9255B273-3F6B-4765-8999-AF99EB8D5950}.Release|Any CPU.Build.0 = Release|Any CPU
+		{700C739D-13CF-417D-B82A-12FB0CF806D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{700C739D-13CF-417D-B82A-12FB0CF806D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{700C739D-13CF-417D-B82A-12FB0CF806D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{700C739D-13CF-417D-B82A-12FB0CF806D5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

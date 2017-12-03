@@ -39,12 +39,21 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Enitities\Category.cs" />
-    <Compile Include="Enitities\Product.cs" />
+    <Compile Include="Entities\Category.cs" />
+    <Compile Include="Entities\Email.cs" />
+    <Compile Include="Entities\ManufacturerName.cs" />
+    <Compile Include="Entities\Product.cs" />
+    <Compile Include="Entities\ProductName.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FunctionalExtensions\FunctionalExtensions.csproj">
+      <Project>{700C739D-13CF-417D-B82A-12FB0CF806D5}</Project>
+      <Name>FunctionalExtensions</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
