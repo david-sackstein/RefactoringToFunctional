@@ -14,15 +14,10 @@ namespace SuperMarket.Entities
 
         public static Result<Email> Create(Maybe<string> emailOrNothing)
         {
-            if (emailOrNothing.HasNoValue)
-                return Result.Fail<Email>("Email is invalid");
-
-            var email = emailOrNothing.Value;
-
-            if (!Regex.IsMatch(email, @"^(.+)@(.+)$"))
-                return Result.Fail<Email>("Email is invalid");
-
-            return Result.Ok<Email>(new Email(email));
+            return emailOrNothing
+                .ToResult("Email is invalid")
+                .Ensure(e => Regex.IsMatch(e, @"^(.+)@(.+)$"), "Email is invalid")
+                .OnSuccess(e => new Email(e));
         }
 
         public static explicit operator Email(string name)

@@ -14,18 +14,11 @@ namespace SuperMarket.Entities
 
         public static Result<ManufacturerName> Create(Maybe<string> nameOrNothing)
         {
-            if (nameOrNothing.HasNoValue)
-                return Result.Fail<ManufacturerName>("Email is invalid");
-
-            var name = nameOrNothing.Value;
-
-            if (string.IsNullOrWhiteSpace(name))
-                return Result.Fail<ManufacturerName>("Manufacturer name must not be empty");
-
-            if (name.Length > 256)
-                return Result.Fail<ManufacturerName>("Manufacturer name is too long");
-
-            return Result.Ok<ManufacturerName>(new ManufacturerName(name));
+            return nameOrNothing
+                .ToResult("Manufacturer name is invalid")
+                .Ensure(n => !string.IsNullOrWhiteSpace(n), "Manufacturer name must not be empty")
+                .Ensure(n => n.Length <= 256, "Manufacturer name is too long")
+                .OnSuccess(n => new ManufacturerName(n));
         }
 
         public static explicit operator ManufacturerName(string name)
