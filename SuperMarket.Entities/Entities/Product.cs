@@ -1,4 +1,4 @@
-﻿using System;
+﻿using FunctionalExtensions;
 
 namespace SuperMarket.Entities
 {
@@ -8,7 +8,7 @@ namespace SuperMarket.Entities
         public Category Category { get; set; }
         public ProductName Name { get; set; }
         public ManufacturerName Manufacturer { get; set; } 
-        public Email ImporterEmail { get; set; } 
+        public Maybe<Email> ImporterEmail { get; set; } 
         public uint Quantity { get; set; }
     }
 }

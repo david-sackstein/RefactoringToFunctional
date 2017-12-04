@@ -1,11 +1,12 @@
-﻿using SuperMarket.Entities;
+﻿using FunctionalExtensions;
+using SuperMarket.Entities;
 
 namespace SuperMarket.Service
 {
     public interface IProductRepository
     {
         void Add(Product product);
-        Product Find(int productId);
+        Maybe<Product> Find(int productId);
         void Commit();
     }
 }

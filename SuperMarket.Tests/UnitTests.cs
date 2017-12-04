@@ -91,7 +91,7 @@ namespace SuperMarket.Tests
             HttpResponse response = _service.GetProduct(productId);
 
             Assert.AreEqual(response.ResponseCode, ResponseCode.Ok);
-            var product = JsonConvert.DeserializeObject<Product>(response.JsonValue);
+            var product = JsonConvert.DeserializeObject<ProductDefinition>(response.JsonValue);
             Assert.AreEqual(productId, product.ProductId);
         }
 
@@ -106,7 +106,7 @@ namespace SuperMarket.Tests
             Assert.AreEqual(ResponseCode.Ok, response.ResponseCode);
 
             response = _service.GetProduct(productId);
-            var product = JsonConvert.DeserializeObject<Product>(response.JsonValue);
+            var product = JsonConvert.DeserializeObject<ProductDefinition>(response.JsonValue);
 
             Assert.AreEqual(originalQuantity - orderQuantity, product.Quantity);
         }
@@ -125,7 +125,7 @@ namespace SuperMarket.Tests
             Assert.AreEqual(ResponseCode.Ok, response.ResponseCode);
 
             response = _service.GetProduct(productId);
-            var product = JsonConvert.DeserializeObject<Product>(response.JsonValue);
+            var product = JsonConvert.DeserializeObject<ProductDefinition>(response.JsonValue);
 
             Assert.IsTrue(product.Quantity == 0);
         }
@@ -144,7 +144,7 @@ namespace SuperMarket.Tests
             Assert.AreEqual(ResponseCode.BadRequest, response.ResponseCode);
 
             response = _service.GetProduct(productId);
-            var product = JsonConvert.DeserializeObject<Product>(response.JsonValue);
+            var product = JsonConvert.DeserializeObject<ProductDefinition>(response.JsonValue);
 
             // quantity should not have changed
             Assert.IsTrue(product.Quantity == _product.Quantity);
@@ -165,7 +165,7 @@ namespace SuperMarket.Tests
             Assert.AreEqual(ResponseCode.InternalError, response.ResponseCode);
 
             response = _service.GetProduct(productId);
-            var product = JsonConvert.DeserializeObject<Product>(response.JsonValue);
+            var product = JsonConvert.DeserializeObject<ProductDefinition>(response.JsonValue);
 
             // quantity should not have changed
             Assert.IsTrue(product.Quantity == _product.Quantity);

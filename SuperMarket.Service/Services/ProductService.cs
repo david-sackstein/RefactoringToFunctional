@@ -25,11 +25,15 @@ namespace SuperMarket.Service
             if (manufacturer.IsFailure)
                 return Response.BadRequest(manufacturer.Error);
 
+            Maybe<Email> emailOrNothing = new Maybe<Email>();
+
             if (definition.ImporterEmail != null)
             {
-                Result<Email> email = Email.Create(definition.ImporterEmail);
+                var email = Email.Create(definition.ImporterEmail);
                 if (email.IsFailure)
                     return Response.BadRequest(email.Error);
+
+                emailOrNothing = email.Value;
             }
 
             Product product = new Product
@@ -38,7 +42,7 @@ namespace SuperMarket.Service
                 Category = definition.Category,
                 Name = productName.Value,
                 Manufacturer = manufacturer.Value,
-                ImporterEmail = (definition.ImporterEmail == null) ? null : (Email)definition.ImporterEmail,
+                ImporterEmail = emailOrNothing,
                 Quantity = definition.Quantity
             };
 
@@ -49,9 +53,13 @@ namespace SuperMarket.Service
 
         public HttpResponse GetProduct(int productId)
         {
-            var product = _repository.Find(productId);
-            if (product == null)
+            Maybe<Product> productOrNone = _repository.Find(productId);
+            if (productOrNone.HasNoValue)
                 return Response.BadRequest($"Product with id {productId} was not found");
+
+            var product = productOrNone.Value;
+
+            Maybe<Email> importerMail = product.ImporterEmail;
 
             ProductDefinition definition = new ProductDefinition
             {
@@ -59,7 +67,7 @@ namespace SuperMarket.Service
                 Category = product.Category,
                 Name = product.Name.Value,
                 Manufacturer = product.Manufacturer.Value,
-                ImporterEmail = product.ImporterEmail?.Value,
+                ImporterEmail = importerMail.HasValue ? importerMail.Value.Value : null,
                 Quantity = product.Quantity
             };
 
@@ -68,9 +76,11 @@ namespace SuperMarket.Service
 
         public HttpResponse Order(int productId, uint quantity)
         {
-            var product = _repository.Find(productId);
-            if (product == null)
+            var productOrNone = _repository.Find(productId);
+            if (productOrNone.HasNoValue)
                 return Response.BadRequest($"Product with id {productId} was not found");
+
+            var product = productOrNone.Value;
 
             if (quantity > (uint)Constants.MaxQuantityInOrder)
                 return Response.BadRequest("The order is too large");

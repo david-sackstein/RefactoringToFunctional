@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
+using NullGuard;
 
 namespace FunctionalExtensions
 {
@@ -191,7 +192,7 @@ namespace FunctionalExtensions
         }
 
         [DebuggerStepThrough]
-        internal Result(bool isFailure, T value, string error)
+        internal Result(bool isFailure, [AllowNull] T value, string error)
         {
             if (!isFailure && value == null)
                 throw new ArgumentNullException(nameof(value));

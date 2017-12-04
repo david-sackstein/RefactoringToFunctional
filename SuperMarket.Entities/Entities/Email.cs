@@ -12,8 +12,13 @@ namespace SuperMarket.Entities
             Value = name;
         }
 
-        public static Result<Email> Create(string email)
+        public static Result<Email> Create(Maybe<string> emailOrNothing)
         {
+            if (emailOrNothing.HasNoValue)
+                return Result.Fail<Email>("Email is invalid");
+
+            var email = emailOrNothing.Value;
+
             if (!Regex.IsMatch(email, @"^(.+)@(.+)$"))
                 return Result.Fail<Email>("Email is invalid");
 

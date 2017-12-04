@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Data;
+using FunctionalExtensions;
 using SuperMarket.Entities;
 
 namespace SuperMarket.Service
@@ -35,13 +36,13 @@ namespace SuperMarket.Service
             _products.Add(product.ProductId, product);
         }
 
-        public Product Find(int productId)
+        public Maybe<Product> Find(int productId)
         {
             if (_persistent.ContainsKey(productId))
             {
                 return _persistent[productId];
             }
-            return null;
+            return new Maybe<Product>();
         }
 
         public void Commit()

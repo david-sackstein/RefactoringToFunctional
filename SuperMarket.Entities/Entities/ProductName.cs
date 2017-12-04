@@ -11,8 +11,13 @@ namespace SuperMarket.Entities
             Value = name;
         }
 
-        public static Result<ProductName> Create(string name)
+        public static Result<ProductName> Create(Maybe<string> nameOrNothing)
         {
+            if (nameOrNothing.HasNoValue)
+                return Result.Fail<ProductName>("Email is invalid");
+
+            var name = nameOrNothing.Value;
+
             if (string.IsNullOrWhiteSpace(name))
                 return Result.Fail<ProductName>("Product name must not be empty");
 

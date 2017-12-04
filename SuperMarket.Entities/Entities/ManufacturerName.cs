@@ -1,4 +1,5 @@
-﻿using FunctionalExtensions;
+﻿using System;
+using FunctionalExtensions;
 
 namespace SuperMarket.Entities
 {
@@ -11,8 +12,13 @@ namespace SuperMarket.Entities
             Value = name;
         }
 
-        public static Result<ManufacturerName> Create(string name)
+        public static Result<ManufacturerName> Create(Maybe<string> nameOrNothing)
         {
+            if (nameOrNothing.HasNoValue)
+                return Result.Fail<ManufacturerName>("Email is invalid");
+
+            var name = nameOrNothing.Value;
+
             if (string.IsNullOrWhiteSpace(name))
                 return Result.Fail<ManufacturerName>("Manufacturer name must not be empty");
 
