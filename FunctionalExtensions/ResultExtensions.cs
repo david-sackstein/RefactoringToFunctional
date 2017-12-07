@@ -12,6 +12,15 @@ namespace FunctionalExtensions
             return Result.Ok<T>(maybe.Value);
         }
 
+        public static Result<K> Map<T, K>(this Result<T> result, Func<T, K> func)
+        {
+            if (result.IsFailure)
+            {
+                return Result.Fail<K>(result.Error);
+            }
+            return Result.Ok<K>(func(result.Value));
+        }
+
         public static Result<K> OnSuccess<T, K>(this Result<T> result, Func<T, K> function)
         {
             if (result.IsFailure)

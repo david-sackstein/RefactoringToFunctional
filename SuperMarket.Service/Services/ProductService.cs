@@ -25,16 +25,7 @@ namespace SuperMarket.Service
             if (manufacturer.IsFailure)
                 return Response.BadRequest(manufacturer.Error);
 
-            Result<Maybe<Email>> emailOrNothing = Result.Ok(new Maybe<Email>());
-
-            if (definition.ImporterEmail != null)
-            {
-                Result<Email> email = Email.Create(definition.ImporterEmail);
-                if (email.IsFailure)
-                    emailOrNothing = Result.Fail<Maybe<Email>>(email.Error);
-                else
-                    emailOrNothing = Result.Ok<Maybe<Email>>(email.Value);
-            }
+            Result<Maybe<Email>> emailOrNothing = GetImporterEmail(definition);
 
             if (emailOrNothing.IsFailure)
                 return Response.BadRequest(emailOrNothing.Error);
@@ -52,6 +43,16 @@ namespace SuperMarket.Service
             _repository.Add(product);
 
             return Commit();
+        }
+
+        private static Result<Maybe<Email>> GetImporterEmail(ProductDefinition definition)
+        {
+            if (definition.ImporterEmail == null)
+            {
+                return Result.Ok(new Maybe<Email>());
+            }
+            return Email.Create(definition.ImporterEmail)
+                .Map(x => (Maybe<Email>)x);
         }
 
         public HttpResponse GetProduct(int productId)
