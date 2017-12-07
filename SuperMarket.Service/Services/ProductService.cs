@@ -18,17 +18,8 @@ namespace SuperMarket.Service
         public HttpResponse CreateProduct(ProductDefinition definition)
         {
             Result<ProductName> productName = ProductName.Create(definition.Name);
-            if (productName.IsFailure)
-                return Response.BadRequest(productName.Error);
-
             Result<ManufacturerName> manufacturer = ManufacturerName.Create(definition.Manufacturer);
-            if (manufacturer.IsFailure)
-                return Response.BadRequest(manufacturer.Error);
-
             Result<Maybe<Email>> emailOrNothing = GetImporterEmail(definition);
-
-            if (emailOrNothing.IsFailure)
-                return Response.BadRequest(emailOrNothing.Error);
 
             return Result.Combine(productName, manufacturer, emailOrNothing)
                 .OnSuccess(() => new Product
@@ -40,10 +31,7 @@ namespace SuperMarket.Service
                     ImporterEmail = emailOrNothing.Value,
                     Quantity = definition.Quantity
                 })
-                .OnSuccess(p =>
-                {
-                    _repository.Add(p);
-                })
+                .OnSuccess(p => _repository.Add(p))
                 .OnBoth(r => r.IsSuccess ? Commit() : Response.BadRequest(r.Error));
         }
 
