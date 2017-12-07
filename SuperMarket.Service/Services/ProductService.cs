@@ -47,25 +47,22 @@ namespace SuperMarket.Service
 
         public HttpResponse GetProduct(int productId)
         {
-            Maybe<Product> productOrNone = _repository.Find(productId);
-            if (productOrNone.HasNoValue)
-                return Response.BadRequest($"Product with id {productId} was not found");
-
-            var product = productOrNone.Value;
-
-            Maybe<Email> importerMail = product.ImporterEmail;
-
-            ProductDefinition definition = new ProductDefinition
-            {
-                ProductId = product.ProductId,
-                Category = product.Category,
-                Name = product.Name.Value,
-                Manufacturer = product.Manufacturer.Value,
-                ImporterEmail = importerMail.HasValue ? importerMail.Value.Value : null,
-                Quantity = product.Quantity
-            };
-
-            return Response.Ok(definition);
+            return _repository.Find(productId)
+                .ToResult($"Product with id {productId} was not found")
+                .OnSuccess(product =>
+                {
+                    Maybe<Email> importerEmail = product.ImporterEmail;
+                    return new ProductDefinition
+                    {
+                        ProductId = product.ProductId,
+                        Category = product.Category,
+                        Name = product.Name.Value,
+                        Manufacturer = product.Manufacturer.Value,
+                        ImporterEmail = importerEmail.HasValue ? importerEmail.Value.Value : null,
+                        Quantity = product.Quantity
+                    };
+                })
+                .OnBoth(t => t.IsSuccess ? Response.Ok(t.Value) : Response.BadRequest(t.Error));
         }
 
         public HttpResponse Order(int productId, uint quantity)
