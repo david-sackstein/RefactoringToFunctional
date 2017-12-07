@@ -25,16 +25,19 @@ namespace SuperMarket.Service
             if (manufacturer.IsFailure)
                 return Response.BadRequest(manufacturer.Error);
 
-            Maybe<Email> emailOrNothing = new Maybe<Email>();
+            Result<Maybe<Email>> emailOrNothing = Result.Ok(new Maybe<Email>());
 
             if (definition.ImporterEmail != null)
             {
-                var email = Email.Create(definition.ImporterEmail);
+                Result<Email> email = Email.Create(definition.ImporterEmail);
                 if (email.IsFailure)
-                    return Response.BadRequest(email.Error);
-
-                emailOrNothing = email.Value;
+                    emailOrNothing = Result.Fail<Maybe<Email>>(email.Error);
+                else
+                    emailOrNothing = Result.Ok<Maybe<Email>>(email.Value);
             }
+
+            if (emailOrNothing.IsFailure)
+                return Response.BadRequest(emailOrNothing.Error);
 
             Product product = new Product
             {
@@ -42,7 +45,7 @@ namespace SuperMarket.Service
                 Category = definition.Category,
                 Name = productName.Value,
                 Manufacturer = manufacturer.Value,
-                ImporterEmail = emailOrNothing,
+                ImporterEmail = emailOrNothing.Value,
                 Quantity = definition.Quantity
             };
 
