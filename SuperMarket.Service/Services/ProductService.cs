@@ -30,19 +30,21 @@ namespace SuperMarket.Service
             if (emailOrNothing.IsFailure)
                 return Response.BadRequest(emailOrNothing.Error);
 
-            Product product = new Product
-            {
-                ProductId = definition.ProductId,
-                Category = definition.Category,
-                Name = productName.Value,
-                Manufacturer = manufacturer.Value,
-                ImporterEmail = emailOrNothing.Value,
-                Quantity = definition.Quantity
-            };
-
-            _repository.Add(product);
-
-            return Commit();
+            return Result.Combine(productName, manufacturer, emailOrNothing)
+                .OnSuccess(() => new Product
+                {
+                    ProductId = definition.ProductId,
+                    Category = definition.Category,
+                    Name = productName.Value,
+                    Manufacturer = manufacturer.Value,
+                    ImporterEmail = emailOrNothing.Value,
+                    Quantity = definition.Quantity
+                })
+                .OnSuccess(p =>
+                {
+                    _repository.Add(p);
+                })
+                .OnBoth(r => r.IsSuccess ? Commit() : Response.BadRequest(r.Error));
         }
 
         private static Result<Maybe<Email>> GetImporterEmail(ProductDefinition definition)
