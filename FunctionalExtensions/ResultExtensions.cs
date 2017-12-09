@@ -29,6 +29,16 @@ namespace FunctionalExtensions
             return Result.Ok<K>(function(result.Value));
         }
 
+        public static Result<K> OnSuccess<T, K>(this Result<T> result, Func<T, Result<K>> func)
+        {
+            if (result.IsFailure)
+                return Result.Fail<K>(result.Error);
+
+            return func(result.Value);
+        }
+
+
+
         public static Result<T> OnSuccess<T>(this Result<T> result, Action<T> action)
         {
             if (result.IsFailure)

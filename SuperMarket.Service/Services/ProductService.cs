@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+
 using FunctionalExtensions;
 using SuperMarket.Entities;
 
@@ -67,38 +69,31 @@ namespace SuperMarket.Service
 
         public HttpResponse Order(int productId, uint quantity)
         {
-            var productOrNone = _repository.Find(productId);
-            if (productOrNone.HasNoValue)
-                return Response.BadRequest($"Product with id {productId} was not found");
-
-            var product = productOrNone.Value;
-
-            if (quantity > (uint)Constants.MaxQuantityInOrder)
-                return Response.BadRequest("The order is too large");
-
-            if (product.Quantity < quantity)
-            {
-                uint excess = quantity - product.Quantity;
-                Result<uint> orderedQuantity = OrderFromSupplier(productId, product, excess);
-                if (orderedQuantity.IsFailure)
-                    return Response.InternalError(orderedQuantity.Error);
-
-                if (product.Quantity + orderedQuantity.Value < quantity)
-                {
-                    return Response.BadRequest("The product is out of stock");
-                }
-
-                product.Quantity += orderedQuantity.Value;
-            }
-
-            product.Quantity -= quantity;
+            _repository.Find(productId)
+                .ToResult($"Product with id {productId} was not found")
+                .Ensure(_ => quantity <= (uint)Constants.MaxQuantityInOrder, "The order is too large")
+                .OnSuccess(p => p.Quantity < quantity ? OrderFromSupplier(p, quantity) : Result.Ok(p))
+                .OnSuccess(p => p.Quantity -= quantity)
+                .OnBoth(t => t.IsSuccess ? Commit() : Response.BadRequest(t.Error));
 
             return Commit();
         }
 
+
+        private Result<Product> OrderFromSupplier(Product product, uint quantity)
+        {
+            uint excess = quantity - product.Quantity;
+
+            return OrderFromSupplierCore(product, excess)
+                .Ensure(orderedQuantity => product.Quantity + orderedQuantity >= quantity, "The product is out of stock")
+                .OnSuccess(orderedQuantity => product.Quantity += orderedQuantity)
+                .OnSuccess(_ => product);
+        }
+
+
         private HttpResponse Commit()
         {
-            try
+            try // The try catch needs to be moved down to _repository.Commit(), catch exceptions on the lower level possible
             {
                 _repository.Commit();
                 return Response.Ok();
@@ -109,11 +104,11 @@ namespace SuperMarket.Service
             }
         }
 
-        private Result<uint> OrderFromSupplier(int productId, Product product, uint excess)
+        private Result<uint> OrderFromSupplierCore(Product product, uint excess)
         {
-            try
+            try // Same here, _supplier.Order() should return Result. If it's an external interface, create a wrapper
             {
-                uint ordered = _supplier.Order(productId, product.Manufacturer, excess);
+                uint ordered = _supplier.Order(product.ProductId, product.Manufacturer, excess);
                 return Result.Ok(ordered);
             }
             catch (Exception e)
